@@ -1,8 +1,11 @@
 package com.gateway.controller;
 
 import java.time.Duration;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeoutException;
 
+import com.gateway.constant.KeyConstant;
+import com.gateway.util.LogUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -19,17 +22,22 @@ import org.springframework.web.reactive.function.client.WebClient.RequestHeaders
 import org.springframework.web.server.ServerWebExchange;
 
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
+import javax.annotation.Resource;
 
 @RestController
 @Slf4j
 public class ApiProxyController {
 
-    WebClient webClient                     = WebClient.create();
+    @Resource
+    private ExecutorService gatewayCallbackExecutor;
 
+    WebClient               webClient                     = WebClient.create();
 
     // 后端服务超时
     // @Value("${backend.service.timeout.inmillis}")
-    long      backendServiceTimeoutInMillis = 3000;
+    long                    backendServiceTimeoutInMillis = 20_000;
 
     @RequestMapping("/**")
     public Mono<Void> proxyRequest(ServerWebExchange exchange) {
@@ -52,7 +60,8 @@ public class ApiProxyController {
             reqHeadersSpec = reqBodySpec;
         }
 
-        return reqHeadersSpec.exchange().timeout(Duration.ofMillis(backendServiceTimeoutInMillis)).onErrorResume(ex -> {
+        // 切回调线程（感觉没必要，nio->callback-->nio）
+        return reqHeadersSpec.exchange().timeout(Duration.ofMillis(backendServiceTimeoutInMillis)).publishOn(Schedulers.fromExecutorService(gatewayCallbackExecutor)).onErrorResume(ex -> {
 
             return Mono.defer(() -> {
 
@@ -70,10 +79,13 @@ public class ApiProxyController {
 
         }).flatMap(backendResponse -> {
 
-            // 将后端服务的响应回写到前端resp
-            log.error("[ApiProxyController] 请求转发、处理！！！！！！！");
+            LogUtil.logRecord(log, "[ApiProxyController] 将数据返回给客户端！！！！！！！",
+                              (Integer) exchange.getAttributes().get(KeyConstant.traceId));
+
             response.setStatusCode(backendResponse.statusCode());
             response.getHeaders().putAll(backendResponse.headers().asHttpHeaders());
+
+            // 此处响应给client走的是netty线程，格式如： ctor-http-nio-2
             return response.writeWith(backendResponse.bodyToFlux(DataBuffer.class));
 
         });

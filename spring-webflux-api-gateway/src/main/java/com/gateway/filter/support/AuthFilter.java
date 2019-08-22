@@ -1,5 +1,7 @@
 package com.gateway.filter.support;
 
+import com.gateway.constant.KeyConstant;
+import com.gateway.util.LogUtil;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -23,12 +25,12 @@ public class AuthFilter extends AbstractGatewayWebFilter {
     // 如果有后置逻辑，需要覆写filter
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        log.error("[AuthFilter] order(1) 前前前前置处理");
+        LogUtil.logRecord(log, "[AuthFilter] order(1) 前前前前置处理",
+                          (Integer) exchange.getAttributes().get(KeyConstant.traceId));
 
         exchange.getAttributes().put(WEB_FILTER_ATTR_NAME, chain);
 
         String appKey = exchange.getRequest().getQueryParams().getFirst(APPKEY_HTTP_HEAD);
-
         if (appKey == null) {
             String denyHttpBody = "{\"code\":2000,\"message\":\"token鉴权不过\"}";
             ServerHttpResponse response = exchange.getResponse();
@@ -37,7 +39,8 @@ public class AuthFilter extends AbstractGatewayWebFilter {
         }
 
         return chain.filter(exchange).then(Mono.fromRunnable(() -> {
-            log.error("[AuthFilter] order(1) 后置处理");
+            LogUtil.logRecord(log, "[AuthFilter] order(1) 后置处理",
+                              (Integer) exchange.getAttributes().get(KeyConstant.traceId));
         }));
     }
 

@@ -1,9 +1,12 @@
 package com.gateway.filter.support;
 
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 
 import javax.annotation.Resource;
 
+import com.gateway.constant.KeyConstant;
+import com.gateway.util.LogUtil;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
@@ -30,7 +33,10 @@ public class EntranceFilter extends AbstractGatewayWebFilter {
     // 如果有后置逻辑，需要覆写filter
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        log.error("[EntranceFilter] order(-1) 前前前前置处理");
+
+        int traceId = new Random().nextInt(10000);
+        exchange.getAttributes().put(KeyConstant.traceId, traceId);
+        LogUtil.logRecord(log, "[EntranceFilter] order(-1) 前前前前置处理", traceId);
 
         String path = exchange.getRequest().getURI().getPath();
         if (path != null && path.indexOf("check_backend_active") >= 0) {

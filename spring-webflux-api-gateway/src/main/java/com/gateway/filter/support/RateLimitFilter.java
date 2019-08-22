@@ -4,7 +4,9 @@ import java.util.concurrent.ExecutorService;
 
 import javax.annotation.Resource;
 
+import com.gateway.constant.KeyConstant;
 import com.gateway.filter.AbstractGatewayWebFilter;
+import com.gateway.util.LogUtil;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
@@ -27,12 +29,15 @@ public class RateLimitFilter extends AbstractGatewayWebFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        log.error("[RateLimitFilter] order(2) 前前前前置处理");
+        LogUtil.logRecord(log, "[RateLimitFilter] order(2) 前前前前置处理",
+                          (Integer) exchange.getAttributes().get(KeyConstant.traceId));
 
-        // 切换线程池，影响链下游任务
+        // 切换回调线程，影响链下游任务
         return chain.filter(exchange).publishOn(Schedulers.fromExecutorService(gatewayCallbackExecutor)).then(Mono.fromRunnable(() -> {
-            log.error("[RateLimitFilter] order(2) 后置处理");
+            LogUtil.logRecord(log, "[RateLimitFilter] order(2) 后置处理",
+                              (Integer) exchange.getAttributes().get(KeyConstant.traceId));
         }));
+
     }
 
     @Override
