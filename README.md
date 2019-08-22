@@ -1,16 +1,21 @@
-1.http/rest api网关：作为反向代理，对外部系统提供统一的服务访问入口，进行鉴权、授权、限流等访问控制，通过后将请求转发给后端服务。
+### 简介
 
-2.高性能：反应式&异步非阻塞io，springboot2+spring5 webflux包括webclient,webfilter、controller
+API网关：作为反向代理，对外部系统提供统一的服务访问入口，并提供鉴权、限流等基础组件服务，最后将请求转发给后面的业务集群。
 
-3.详细介绍见[基于spring webflux的高性能rest api网关]()
+特性：基于事件响应、异步非阻塞
 
+框架：springboot2、spring5 webflux
 
----
+### 重点
+
+* 基于扩展接口`WebFilter`实现子类，组成`WebFilterChain`链，优先级由小到大，顺序执行实现一系列组件功能
+* 底层与外界（接收请求、转发请求、转发后异步等待返回数据）通信基于netty，需要借助异步特性+NIO，当有数据响应时通过IO线程触发Mono任务链
+
 ### 示例
 
 1、 鉴权不过
 
-http://localhost:9988/route?
+http://localhost:8080/route?
 
 ```
 {
@@ -21,7 +26,7 @@ http://localhost:9988/route?
 
 2、目标url参数不合法
 
-http://localhost:9988/route?appKey="111"&targetUrl=“22222”
+http://localhost:8080/route?appKey="111"&targetUrl=“22222”
 
 ```
 {
@@ -32,18 +37,24 @@ http://localhost:9988/route?appKey="111"&targetUrl=“22222”
 
 3、目标url合法
 
-http://localhost:9988/route?appKey="111"&targetUrl=https://www.baidu.com
+http://localhost:8080/route?appKey=111&targetUrl=http%3A%2F%2Flocalhost%3A8091%2Forder%2Fquery%3ForderId%3D111%26time%3D2000
+
+转义前：
 
 ```
-正常结果。。。。
+http://localhost:8080/route?appKey=111&targetUrl=http://localhost:8091/order/query?orderId=111&time=2000
+```
+
+```
+查到订单：111
 
 ```
 
 4、转发http超时
 
-WebClient 增加超时配置
+WebClient 增加超时配置 `1ms`
 
-http://localhost:9988/route?appKey="111"&targetUrl=https://www.baidu.com
+http://localhost:8080/route?appKey=111&targetUrl=http%3A%2F%2Flocalhost%3A8091%2Forder%2Fquery%3ForderId%3D111%26time%3D2000
 
 
 ```
@@ -56,15 +67,27 @@ http://localhost:9988/route?appKey="111"&targetUrl=https://www.baidu.com
 5、线程切换
 
 ```
-2019-08-22 18:01:46.031 ERROR 78970 --- [    core-pool-0] c.d.h.a.g.access.filter.RateLimitFilter  : [RateLimitFilter] order(2) 后置处理
-2019-08-22 18:01:46.729 ERROR 78970 --- [ctor-http-nio-2] c.d.h.a.g.a.c.ApiProxyController         : [ApiProxyController] 代理转发、处理！！！！！！！
-2019-08-22 18:01:46.816 ERROR 78970 --- [    back-poll-0] c.d.h.a.g.access.filter.AuthFilter       : [AuthFilter] order(1) 后置处理
+2019-08-22 20:37:08.953 ERROR 82156 --- [ctor-http-nio-4] c.gateway.filter.support.EntranceFilter  : [EntranceFilter] order(-1) 前前前前置处理
+2019-08-22 20:37:08.953 ERROR 82156 --- [    core-pool-0] com.gateway.filter.support.AuthFilter    : [AuthFilter] order(1) 前前前前置处理
+2019-08-22 20:37:08.953 ERROR 82156 --- [    core-pool-0] c.g.filter.support.RateLimitFilter       : [RateLimitFilter] order(2) 前前前前置处理
+2019-08-22 20:37:10.967 ERROR 82156 --- [ctor-http-nio-3] c.gateway.controller.ApiProxyController  : [ApiProxyController] 请求转发、处理！！！！！！！
+2019-08-22 20:37:10.970 ERROR 82156 --- [    back-poll-1] c.g.filter.support.RateLimitFilter       : [RateLimitFilter] order(2) 后置处理
+2019-08-22 20:37:10.970 ERROR 82156 --- [    back-poll-1] com.gateway.filter.support.AuthFilter    : [AuthFilter] order(1) 后置处理
+
 ```
 
 6、增加Nginx的心跳检测
 
+http://localhost:8080/check_backend_active.html
 
 ```
+success
+```
+
+7、业务集群API响应模拟超时，看看大访问情况下，线程池的空闲情况
+
+```
+
 
 ```
 
