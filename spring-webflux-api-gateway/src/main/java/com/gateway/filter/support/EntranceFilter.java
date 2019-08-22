@@ -39,6 +39,7 @@ public class EntranceFilter extends AbstractGatewayWebFilter {
             return response.writeWith(Mono.just(response.bufferFactory().wrap("success".getBytes())));
         }
 
+        // 切换线程池，指定上游源头的调度器
         return chain.filter(exchange).subscribeOn(Schedulers.fromExecutorService(gatewayCoreAsyncRequestExecutor));
     }
 

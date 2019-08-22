@@ -7,12 +7,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
+
 @RestController
 @RequestMapping("/order")
-@Slf4j
 public class OrderController {
 
-    @RequestMapping(value = "/query")
+    @RequestMapping("/query")
     public String apiRequestHandleForGet(HttpServletRequest request, HttpServletResponse response) throws Exception {
 
         Long orderId = Long.valueOf(request.getParameter("orderId"));

@@ -29,6 +29,7 @@ public class RateLimitFilter extends AbstractGatewayWebFilter {
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         log.error("[RateLimitFilter] order(2) 前前前前置处理");
 
+        // 切换线程池，影响链下游任务
         return chain.filter(exchange).publishOn(Schedulers.fromExecutorService(gatewayCallbackExecutor)).then(Mono.fromRunnable(() -> {
             log.error("[RateLimitFilter] order(2) 后置处理");
         }));
