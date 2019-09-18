@@ -30,10 +30,10 @@ public class ThreadMonitor {
 
         scheduler.scheduleWithFixedDelay(() -> {
 
-            String commonFormat = "ActiveCount（%d）,CorePoolSize（%d）,queueSize（%d）,completedTaskCount（%d）,TaskCount（%d）";
+            String commonFormat = "ActiveCount（%d）,PoolSize（%d）,queueSize（%d）,completedTaskCount（%d）,TaskCount（%d）";
             String coreFormat = "core线程池：" + commonFormat;
             String core = String.format(coreFormat, gatewayCoreAsyncRequestExecutor.getActiveCount(),
-                                        gatewayCoreAsyncRequestExecutor.getCorePoolSize(),
+                                        gatewayCoreAsyncRequestExecutor.getPoolSize(),
                                         gatewayCoreAsyncRequestExecutor.getQueue().size(),
                                         gatewayCoreAsyncRequestExecutor.getCompletedTaskCount(),
                                         gatewayCoreAsyncRequestExecutor.getTaskCount());
@@ -41,11 +41,11 @@ public class ThreadMonitor {
 
             String backFormat = "back线程池：" + commonFormat;
             String back = String.format(backFormat, gatewayCallbackExecutor.getActiveCount(),
-                                        gatewayCallbackExecutor.getCorePoolSize(),
+                                        gatewayCallbackExecutor.getPoolSize(),
                                         gatewayCallbackExecutor.getQueue().size(),
                                         gatewayCallbackExecutor.getCompletedTaskCount(),
                                         gatewayCallbackExecutor.getTaskCount());
-            LogUtil.logRecord(log, back);
+//            LogUtil.logRecord(log, back);
 
         }, 1000, 1000, TimeUnit.MILLISECONDS);
     }

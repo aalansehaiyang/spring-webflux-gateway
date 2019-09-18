@@ -61,7 +61,9 @@ public class ApiProxyController {
         }
 
         // 切回调线程（感觉没必要，nio->callback-->nio）
-        return reqHeadersSpec.exchange().timeout(Duration.ofMillis(backendServiceTimeoutInMillis)).publishOn(Schedulers.fromExecutorService(gatewayCallbackExecutor)).onErrorResume(ex -> {
+        return reqHeadersSpec.exchange().timeout(Duration.ofMillis(backendServiceTimeoutInMillis))
+//                .publishOn(Schedulers.fromExecutorService(gatewayCallbackExecutor))
+                .onErrorResume(ex -> {
 
             return Mono.defer(() -> {
 
