@@ -23,7 +23,7 @@ public class ThreadMonitor {
     @Resource
     private ThreadPoolExecutor gatewayCallbackExecutor;
 
-    @PostConstruct
+//    @PostConstruct
     public void handle() {
 
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();

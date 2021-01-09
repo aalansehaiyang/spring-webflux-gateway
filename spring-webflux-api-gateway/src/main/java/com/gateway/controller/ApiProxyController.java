@@ -46,9 +46,10 @@ public class ApiProxyController {
         ServerHttpResponse response = exchange.getResponse();
 
         HttpMethod httpMethod = request.getMethod();
-        String targetUrl = exchange.getRequest().getQueryParams().getFirst("targetUrl");
+//        String targetUrl = exchange.getRequest().getQueryParams().getFirst("targetUrl");
 
-        RequestBodySpec reqBodySpec = webClient.method(httpMethod).uri(targetUrl).headers(httpHeaders -> {
+        String targetUrl="https://127.0.0.1:9097";
+        RequestBodySpec reqBodySpec = webClient.method(httpMethod).uri(targetUrl).contentType(MediaType.valueOf(MediaType.TEXT_PLAIN_VALUE)).headers(httpHeaders -> {
             httpHeaders.addAll(request.getHeaders());
             httpHeaders.remove("HOST");
         });
@@ -74,7 +75,7 @@ public class ApiProxyController {
                     errorResultJson = "{\"code\":1000,\"message\":\"系统异常\"}";
                 }
                 // response.setStatusCode(HttpStatus.UNAUTHORIZED);
-                response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+//                response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
                 return response.writeWith(Mono.just(response.bufferFactory().wrap(errorResultJson.getBytes())));
 
             }).then(Mono.empty());

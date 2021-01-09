@@ -8,9 +8,9 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerA
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.web.reactive.config.EnableWebFlux;
 
-@SpringBootApplication(exclude = { DataSourceAutoConfiguration.class,
-                                   DataSourceTransactionManagerAutoConfiguration.class,
-                                   FreeMarkerAutoConfiguration.class })
+@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class,
+        DataSourceTransactionManagerAutoConfiguration.class,
+        FreeMarkerAutoConfiguration.class})
 @EnableWebFlux
 @ComponentScan("com.gateway")
 public class GateWayApplication {
