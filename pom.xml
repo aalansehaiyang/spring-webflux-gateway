@@ -11,8 +11,8 @@
      <packaging>pom</packaging>
 
     <modules>
-        <module>spring-webflux-api-gateway</module>
         <module>order-web</module>
+        <module>spring-webflux-api-gateway</module>
     </modules>
 
 
